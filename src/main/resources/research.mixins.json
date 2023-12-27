@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "mods.officialy.geostratum.research.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "Research-Mod.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
