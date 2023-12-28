@@ -1,24 +1,23 @@
 package mods.officialy.researchmod;
 
+import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.Dynamic;
+import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.RegistryCodecs;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.commands.DataPackCommand;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -47,6 +46,7 @@ import java.util.Arrays;
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(ResearchMod.MODID)
 public class ResearchMod {
+    public static final Codec<ResearchMod> CODEC = Codec.unit(ResearchMod::new);
 
     // Define mod id in a common place for everything to reference
     public static final String MODID = "research";
@@ -146,13 +146,24 @@ public class ResearchMod {
         LOGGER.info(Arrays.toString(registries.registryOrThrow(RESEARCH_KEY).entrySet().toArray()));
     }
 
+    public static final Codec<Ingredient> INGREDIENT_CODEC = Codec.PASSTHROUGH.comapFlatMap(dynamic -> {
+                try {
+                    Ingredient ingredient = Ingredient.fromJson(dynamic.convert(JsonOps.INSTANCE).getValue());
+                    return DataResult.success(ingredient);
+                } catch (Exception e) {
+                    return DataResult.error(e::getMessage);
+                }
+            },
+            ingredient -> new Dynamic<>(JsonOps.INSTANCE, ingredient.toJson()));
 
     private void addDataPackRegistry(final DataPackRegistryEvent.NewRegistry event) {
         LOGGER.info("Adding new Registry!");
+        final Codec<Pair<Ingredient, Integer>> entryCodec = Codec.pair(INGREDIENT_CODEC.fieldOf("ingredient").codec(), Codec.INT.fieldOf("count").codec());
         final Codec<Node> nodeCodec = RecordCodecBuilder.create(instance ->
                 instance.group(
                         ResourceLocation.CODEC.fieldOf("researchName").forGetter(Node::getResearchName),
-                        ItemStack.CODEC.listOf().fieldOf("items").forGetter(Node::getPrerequisiteItems)).apply(instance, Node::new));
+                        entryCodec.listOf().fieldOf("items").forGetter(Node::getPrerequisiteItems))
+                .apply(instance, Node::new));
         event.dataPackRegistry(RESEARCH_KEY, nodeCodec, nodeCodec);
     }
 

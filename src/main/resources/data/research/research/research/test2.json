@@ -2,15 +2,16 @@
   "researchName": "research:test323",
   "items": [
     {
-      "id": "minecraft:diamond_helmet",
-      "Count": 1,
-      "tag": "{Enchantments: [{id: \"minecraft:projectile_protection\", lvl: 2s}]}"
+      "ingredient": {
+        "item": "minecraft:apple"
+      },
+      "count": 25
     },
     {
-
-      "id": "minecraft:stick",
-      "Count": 25
+      "ingredient": {
+        "tag": "minecraft:planks"
+      },
+      "count": 32
     }
   ]
-
 }
