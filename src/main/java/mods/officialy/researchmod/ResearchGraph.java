@@ -1,10 +1,12 @@
 package mods.officialy.researchmod;
 
+import net.minecraft.resources.ResourceLocation;
+
 import java.util.*;
 
 public class ResearchGraph {
 
-    Map<String, Node> researchNodes;
+    Map<ResourceLocation, Node> researchNodes;
     Set<ResearchEventListener> eventListeners;
 
     public ResearchGraph() {
@@ -12,8 +14,8 @@ public class ResearchGraph {
         this.eventListeners = new HashSet<>();
     }
 
-    public void addResearch(String researchName) {
-        researchNodes.put(researchName, new Node(researchName));
+    public void addResearch(ResourceLocation researchName) {
+        researchNodes.put(researchName, new Node(researchName, new ArrayList<>()));
     }
 
     public void addPrerequisite(String researchName, String prerequisiteName) {
@@ -21,7 +23,7 @@ public class ResearchGraph {
         Node prerequisiteNode = researchNodes.get(prerequisiteName);
 
         if (researchNode != null && prerequisiteNode != null) {
-            researchNode.prerequisites.add(prerequisiteNode);
+            researchNode.getPrerequisites().add(prerequisiteNode);
         } else {
             System.out.println("Research or prerequisite not found.");
         }
@@ -31,7 +33,7 @@ public class ResearchGraph {
         eventListeners.add(listener);
     }
 
-    public boolean canResearch(String researchName, Set<String> researched) {
+    public boolean canResearch(ResourceLocation researchName, Set<ResourceLocation> researched) {
         Node researchNode = researchNodes.get(researchName);
 
         if (researchNode == null) {
@@ -39,8 +41,8 @@ public class ResearchGraph {
             return false;
         }
 
-        for (Node prerequisite : researchNode.prerequisites) {
-            if (!researched.contains(prerequisite.researchName) || !canResearch(prerequisite.researchName, researched)) {
+        for (Node prerequisite : researchNode.getPrerequisites()) {
+            if (!researched.contains(prerequisite.getResearchName()) || !canResearch(prerequisite.getResearchName(), researched)) {
                 return false;
             }
         }
@@ -48,7 +50,7 @@ public class ResearchGraph {
         return true;
     }
 
-    public void unlockResearch(String researchName) {
+    public void unlockResearch(ResourceLocation researchName) {
         Node researchNode = researchNodes.get(researchName);
 
         if (researchNode != null && !researchNode.isActivated()) {
@@ -58,7 +60,7 @@ public class ResearchGraph {
         }
     }
 
-    private void notifyListeners(String researchName) {
+    private void notifyListeners(ResourceLocation researchName) {
         for (ResearchEventListener listener : eventListeners) {
             listener.onResearchUnlocked(researchName);
         }
@@ -67,22 +69,22 @@ public class ResearchGraph {
     public static void main(String[] args) {
         ResearchGraph researchGraph = new ResearchGraph();
 
-        researchGraph.addResearch("Advanced Materials");
-        researchGraph.addResearch("Energy Efficiency");
-        researchGraph.addResearch("Robotics");
-        researchGraph.addResearch("AI Integration");
-
-        researchGraph.addPrerequisite("Robotics", "Advanced Materials");
-        researchGraph.addPrerequisite("AI Integration", "Robotics");
-        researchGraph.addPrerequisite("AI Integration", "Energy Efficiency");
-
-        researchGraph.addResearchEventListener(researchName ->
-                System.out.println("Research unlocked: " + researchName));
-
-        Set<String> researched = new HashSet<>();
-        researched.add("Advanced Materials");
-        researched.add("Energy Efficiency");
-
-        researchGraph.unlockResearch("Robotics"); // This should activate "Robotics" and trigger an event
+//        researchGraph.addResearch(new ResourceLocation("Advanced Materials"));
+//        researchGraph.addResearch("Energy Efficiency"));
+//        researchGraph.addResearch("Robotics"));
+//        researchGraph.addResearch("AI Integration"));
+//
+//        researchGraph.addPrerequisite("Robotics", "Advanced Materials");
+//        researchGraph.addPrerequisite("AI Integration", "Robotics");
+//        researchGraph.addPrerequisite("AI Integration", "Energy Efficiency");
+//
+//        researchGraph.addResearchEventListener(researchName ->
+//                System.out.println("Research unlocked: " + researchName));
+//
+//        Set<String> researched = new HashSet<>();
+//        researched.add("Advanced Materials");
+//        researched.add("Energy Efficiency");
+//
+//        researchGraph.unlockResearch("Robotics"); // This should activate "Robotics" and trigger an event
     }
 }
