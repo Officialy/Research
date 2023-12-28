@@ -15,7 +15,7 @@ public class ResearchGraph {
     }
 
     public void addResearch(ResourceLocation researchName) {
-        researchNodes.put(researchName, new Node(researchName, new ArrayList<>()));
+        researchNodes.put(researchName, new Node(researchName, new ArrayList<>(), new ArrayList<>()));
     }
 
     public void addPrerequisite(String researchName, String prerequisiteName) {
@@ -23,7 +23,7 @@ public class ResearchGraph {
         Node prerequisiteNode = researchNodes.get(prerequisiteName);
 
         if (researchNode != null && prerequisiteNode != null) {
-            researchNode.getPrerequisites().add(prerequisiteNode);
+            researchNode.getPrerequisites().add(prerequisiteNode.getResearchName());
         } else {
             System.out.println("Research or prerequisite not found.");
         }
@@ -41,8 +41,8 @@ public class ResearchGraph {
             return false;
         }
 
-        for (Node prerequisite : researchNode.getPrerequisites()) {
-            if (!researched.contains(prerequisite.getResearchName()) || !canResearch(prerequisite.getResearchName(), researched)) {
+        for (ResourceLocation prerequisite : researchNode.getPrerequisites()) {
+            if (!researched.contains(prerequisite) || !canResearch(prerequisite, researched)) {
                 return false;
             }
         }

@@ -1,5 +1,8 @@
 {
   "researchName": "research:test323",
+  "prerequisites": [
+    "research:test1"
+  ],
   "items": [
     {
       "ingredient": {

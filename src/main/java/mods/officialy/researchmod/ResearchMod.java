@@ -42,11 +42,11 @@ import net.minecraftforge.registries.*;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
+import java.util.List;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(ResearchMod.MODID)
 public class ResearchMod {
-    public static final Codec<ResearchMod> CODEC = Codec.unit(ResearchMod::new);
 
     // Define mod id in a common place for everything to reference
     public static final String MODID = "research";
@@ -158,11 +158,12 @@ public class ResearchMod {
 
     private void addDataPackRegistry(final DataPackRegistryEvent.NewRegistry event) {
         LOGGER.info("Adding new Registry!");
-        final Codec<Pair<Ingredient, Integer>> entryCodec = Codec.pair(INGREDIENT_CODEC.fieldOf("ingredient").codec(), Codec.INT.fieldOf("count").codec());
+        final Codec<Pair<Ingredient, Integer>> ingredientCodec = Codec.pair(INGREDIENT_CODEC.fieldOf("ingredient").codec(), Codec.INT.fieldOf("count").codec());
         final Codec<Node> nodeCodec = RecordCodecBuilder.create(instance ->
                 instance.group(
                         ResourceLocation.CODEC.fieldOf("researchName").forGetter(Node::getResearchName),
-                        entryCodec.listOf().fieldOf("items").forGetter(Node::getPrerequisiteItems))
+                        ResourceLocation.CODEC.listOf().fieldOf("prerequisites").forGetter(Node::getPrerequisites),
+                        ingredientCodec.listOf().fieldOf("items").forGetter(Node::getPrerequisiteItems))
                 .apply(instance, Node::new));
         event.dataPackRegistry(RESEARCH_KEY, nodeCodec, nodeCodec);
     }
