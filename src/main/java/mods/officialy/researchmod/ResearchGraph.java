@@ -56,13 +56,31 @@ public class ResearchGraph {
         if (researchNode != null && !researchNode.isActivated()) {
             researchNode.activate();
             researchNode.consumeItems();
-            notifyListeners(researchName);
+            notifyListeners(researchName, ResearchEvent.ACTIVATED);
+            notifyListeners(researchName, ResearchEvent.ITEMS_CONSUMED);
+//            notifyListeners(researchName, ResearchEvent.COMPLETED);
         }
     }
 
-    private void notifyListeners(ResourceLocation researchName) {
+    private void notifyListeners(ResourceLocation researchName, ResearchEvent event) {
         for (ResearchEventListener listener : eventListeners) {
-            listener.onResearchUnlocked(researchName);
+            switch (event) {
+                case ACTIVATED:
+                    listener.onResearchActivated(researchName);
+                    break;
+                case ITEMS_CONSUMED:
+                    listener.onResearchItemsConsumed(researchName);
+                    break;
+                case COMPLETED:
+                    listener.onResearchCompleted(researchName);
+                    break;
+                case DEACTIVATED:
+                    listener.onResearchDeactivated(researchName);
+                    break;
+                case PAUSED:
+                    listener.onResearchPaused(researchName);
+                    break;
+            }
         }
     }
 
