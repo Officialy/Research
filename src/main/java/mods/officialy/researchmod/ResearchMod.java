@@ -3,6 +3,7 @@ package mods.officialy.researchmod;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
+import net.minecraftforge.fml.DistExecutor;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Dynamic;
@@ -56,7 +57,7 @@ public class ResearchMod {
     // Define mod id in a common place for everything to reference
     public static final String MODID = "research";
     // Directly reference a slf4j logger
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
     // Create a Deferred Register to hold Blocks which will all be registered under the "research" namespace
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
     // Create a Deferred Register to hold Items which will all be registered under the "research" namespace
@@ -92,6 +93,7 @@ public class ResearchMod {
     public static final ResourceKey<Registry<Node>> RESEARCH_KEY = ResourceKey.createRegistryKey(new ResourceLocation(MODID, "research"));
 
     public ResearchMod() {
+
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         // Register the commonSetup method for modloading
@@ -107,6 +109,7 @@ public class ResearchMod {
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(ModEvents.class);
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
@@ -187,14 +190,6 @@ public class ResearchMod {
         public static void registerBindings(RegisterKeyMappingsEvent event) {
             event.register(SHOW_TREE_BINDING.get());
         }
-
-//        public static void onClientTick(TickEvent.ClientTickEvent event) {
-//            if (event.phase == TickEvent.Phase.END) { // Only call code once as the tick event is called twice every tick
-//                while (SHOW_TREE_BINDING.get().consumeClick()) {
-//                    Minecraft.getInstance().setScreen(new ResearchTreeScreen());
-//                }
-//            }
-//        }
 
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
