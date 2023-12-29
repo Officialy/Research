@@ -18,7 +18,7 @@ public class ResearchGraph {
         researchNodes.put(researchName, new Node(researchName, new ArrayList<>(), new ArrayList<>()));
     }
 
-    public void addPrerequisite(String researchName, String prerequisiteName) {
+    public void addPrerequisite(ResourceLocation researchName, ResourceLocation prerequisiteName) {
         Node researchNode = researchNodes.get(researchName);
         Node prerequisiteNode = researchNodes.get(prerequisiteName);
 
