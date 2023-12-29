@@ -96,6 +96,7 @@ public class ResearchMod {
 
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
+        //modEventBus.addListener(ClientModEvents::onClientTick);
 
         // Register the Deferred Register to the mod event bus so blocks get registered
         BLOCKS.register(modEventBus);
@@ -183,17 +184,17 @@ public class ResearchMod {
 
         // Event is on the mod event bus only on the physical client
         @SubscribeEvent
-        public void registerBindings(RegisterKeyMappingsEvent event) {
+        public static void registerBindings(RegisterKeyMappingsEvent event) {
             event.register(SHOW_TREE_BINDING.get());
         }
 
-        public void onClientTick(TickEvent.ClientTickEvent event) {
-            if (event.phase == TickEvent.Phase.END) { // Only call code once as the tick event is called twice every tick
-                while (SHOW_TREE_BINDING.get().consumeClick()) {
-                    Minecraft.getInstance().setScreen(new ResearchTreeScreen());
-                }
-            }
-        }
+//        public static void onClientTick(TickEvent.ClientTickEvent event) {
+//            if (event.phase == TickEvent.Phase.END) { // Only call code once as the tick event is called twice every tick
+//                while (SHOW_TREE_BINDING.get().consumeClick()) {
+//                    Minecraft.getInstance().setScreen(new ResearchTreeScreen());
+//                }
+//            }
+//        }
 
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
