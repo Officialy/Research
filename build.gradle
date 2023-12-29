@@ -170,13 +170,6 @@ dependencies {
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
-    // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
-    // compile against the JEI API but do not include it at runtime
-    compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"))
-    compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"))
-    // at runtime, use the full JEI jar for Forge
-    runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
     // Example mod dependency using a mod jar from ./libs with a flat dir repository
     // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
     // The group id is ignored when searching -- in this case, it is "blank"
@@ -187,8 +180,26 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    compileOnly fg.deobf("net.darkhax.gamestages:GameStages-Forge-${minecraft_version}:${gamestages_version}")
-    runtimeOnly fg.deobf("net.darkhax.gamestages:GameStages-Forge-${minecraft_version}:${gamestages_version}")
+
+    // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
+    // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
+    // compile against the JEI API but do not include it at runtime
+    compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"))
+    compileOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"))
+    // at runtime, use the full JEI jar for Forge
+    runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}"))
+
+    //Bookshelf
+    compileOnly(fg.deobf("net.darkhax.bookshelf:Bookshelf-Forge-${minecraft_version}:${bookshelf_version}"))
+    runtimeOnly(fg.deobf("net.darkhax.bookshelf:Bookshelf-Forge-${minecraft_version}:${bookshelf_version}"))
+
+    // Game Stages
+    compileOnly(fg.deobf("net.darkhax.gamestages:GameStages-Forge-${minecraft_version}:${gamestages_version}"))
+    runtimeOnly(fg.deobf("net.darkhax.gamestages:GameStages-Forge-${minecraft_version}:${gamestages_version}"))
+
+    // FTB Teams - Doesn't like FG? Probably needs Loom again
+//    compileOnly("dev.ftb.mods:ftb-teams-forge:${ftb_teams_version}")
+//    runtimeOnly("dev.ftb.mods:ftb-teams-forge:${ftb_teams_version}")
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

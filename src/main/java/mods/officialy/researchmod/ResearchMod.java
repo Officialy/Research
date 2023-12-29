@@ -1,5 +1,6 @@
 package mods.officialy.researchmod;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
@@ -7,6 +8,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
@@ -26,8 +28,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -39,10 +44,10 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.*;
+import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
-import java.util.List;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(ResearchMod.MODID)
@@ -63,10 +68,10 @@ public class ResearchMod {
     public static final RegistryObject<Block> EXAMPLE_BLOCK = BLOCKS.register("example_block", () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.STONE)) {
         // Laziest possible way I could have gotten the research entries
         @Override
-        public InteractionResult use(BlockState p_60503_, Level p_60504_, BlockPos p_60505_, Player p_60506_, InteractionHand p_60507_, BlockHitResult p_60508_) {
-            RegistryAccess registries = p_60504_.registryAccess();
+        public InteractionResult use(BlockState p_60503_, Level level, BlockPos p_60505_, Player player, InteractionHand p_60507_, BlockHitResult p_60508_) {
+            RegistryAccess registries = level.registryAccess();
             LOGGER.info(Arrays.toString(registries.registryOrThrow(RESEARCH_KEY).entrySet().toArray()));
-            return super.use(p_60503_, p_60504_, p_60505_, p_60506_, p_60507_, p_60508_);
+            return super.use(p_60503_, level, p_60505_, player, p_60507_, p_60508_);
         }
     });
     // Creates a new BlockItem with the id "research:example_block", combining the namespace and path
@@ -161,16 +166,34 @@ public class ResearchMod {
         final Codec<Pair<Ingredient, Integer>> ingredientCodec = Codec.pair(INGREDIENT_CODEC.fieldOf("ingredient").codec(), Codec.INT.fieldOf("count").codec());
         final Codec<Node> nodeCodec = RecordCodecBuilder.create(instance ->
                 instance.group(
-                        ResourceLocation.CODEC.fieldOf("researchName").forGetter(Node::getResearchName),
-                        ResourceLocation.CODEC.listOf().fieldOf("prerequisites").forGetter(Node::getPrerequisites),
-                        ingredientCodec.listOf().fieldOf("items").forGetter(Node::getPrerequisiteItems))
-                .apply(instance, Node::new));
+                                ResourceLocation.CODEC.fieldOf("researchName").forGetter(Node::getResearchName),
+                                ResourceLocation.CODEC.listOf().fieldOf("prerequisites").forGetter(Node::getPrerequisites),
+                                ingredientCodec.listOf().fieldOf("items").forGetter(Node::getPrerequisiteItems))
+                        .apply(instance, Node::new));
         event.dataPackRegistry(RESEARCH_KEY, nodeCodec, nodeCodec);
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
     @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
+        public static final Lazy<KeyMapping> SHOW_TREE_BINDING = Lazy.of(() -> new KeyMapping("key.research.show_screen",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_P,
+                "key.categories.misc"));
+
+        // Event is on the mod event bus only on the physical client
+        @SubscribeEvent
+        public void registerBindings(RegisterKeyMappingsEvent event) {
+            event.register(SHOW_TREE_BINDING.get());
+        }
+
+        public void onClientTick(TickEvent.ClientTickEvent event) {
+            if (event.phase == TickEvent.Phase.END) { // Only call code once as the tick event is called twice every tick
+                while (SHOW_TREE_BINDING.get().consumeClick()) {
+                    Minecraft.getInstance().setScreen(new ResearchTreeScreen());
+                }
+            }
+        }
 
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
