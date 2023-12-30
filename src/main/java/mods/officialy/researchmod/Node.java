@@ -1,6 +1,7 @@
 package mods.officialy.researchmod;
 
 import com.mojang.datafixers.util.Pair;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
 
@@ -14,12 +15,17 @@ public class Node {
     private final List<ResourceLocation> prerequisites;
     private boolean activated;
     private final List<Pair<Ingredient, Integer>> prerequisiteItems;
+    private final Component translatedName;
+    private final Component translatedDescription;
+
 
     Node(ResourceLocation name, List<ResourceLocation> prerequisites, List<Pair<Ingredient, Integer>> prerequisiteItems) {
         this.researchName = name;
         this.prerequisites = prerequisites;
         this.activated = false;
         this.prerequisiteItems = prerequisiteItems;
+        this.translatedName = Component.translatable(researchName.toLanguageKey() + ".research.title");
+        this.translatedDescription = Component.translatable(researchName.toLanguageKey() + ".research.description");
     }
 
     boolean isActivated() {
@@ -47,6 +53,14 @@ public class Node {
 
     public List<Pair<Ingredient, Integer>> getPrerequisiteItems() {
         return prerequisiteItems;
+    }
+
+    public Component getTranslatedName() {
+        return translatedName;
+    }
+
+    public Component getTranslatedDescription() {
+        return translatedDescription;
     }
 
     @Override

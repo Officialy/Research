@@ -1,0 +1,19 @@
+{
+  "researchName": "research:test1",
+  "prerequisites": [
+  ],
+  "items": [
+    {
+      "ingredient": {
+        "item": "minecraft:stick"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "tag": "minecraft:wool"
+      },
+      "count": 25
+    }
+  ]
+}

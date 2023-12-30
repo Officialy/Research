@@ -1,14 +1,16 @@
 package mods.officialy.researchmod;
 
+import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.MutableGraph;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
-import net.minecraftforge.fml.DistExecutor;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import dev.latvian.mods.kubejs.script.data.DataPackEventJS;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.*;
@@ -32,8 +34,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Lazy;
+import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -49,6 +51,7 @@ import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
+import java.util.Map;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(ResearchMod.MODID)
@@ -65,6 +68,9 @@ public class ResearchMod {
     // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "examplemod" namespace
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
+    @SuppressWarnings({"UnstableApiUsage"}) // Shush the "beta" annotation
+    MutableGraph<Object> RESEARCH_TREE = GraphBuilder.directed().build();
+
     // Creates a new Block with the id "research:example_block", combining the namespace and path
     public static final RegistryObject<Block> EXAMPLE_BLOCK = BLOCKS.register("example_block", () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.STONE)) {
         // Laziest possible way I could have gotten the research entries
@@ -72,6 +78,8 @@ public class ResearchMod {
         public InteractionResult use(BlockState p_60503_, Level level, BlockPos p_60505_, Player player, InteractionHand p_60507_, BlockHitResult p_60508_) {
             RegistryAccess registries = level.registryAccess();
             LOGGER.info(Arrays.toString(registries.registryOrThrow(RESEARCH_KEY).entrySet().toArray()));
+//            FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) player).get().get();
+//            ((ServerLevel) level).getDataStorage().computeIfAbsent()
             return super.use(p_60503_, level, p_60505_, player, p_60507_, p_60508_);
         }
     });
@@ -145,6 +153,19 @@ public class ResearchMod {
         LOGGER.info("HELLO from server starting");
         RegistryAccess registries = event.getServer().registryAccess();
         LOGGER.info(Arrays.toString(registries.registryOrThrow(RESEARCH_KEY).entrySet().toArray()));
+        assembleResearchTree(registries.registryOrThrow(RESEARCH_KEY));
+        LOGGER.info(RESEARCH_TREE.toString());
+
+    }
+
+    private void assembleResearchTree(Registry<Node> nodes) {
+        for (Map.Entry<ResourceKey<Node>, Node> resourceKeyNodeEntry : nodes.entrySet()) {
+            RESEARCH_TREE.addNode(resourceKeyNodeEntry.getValue());
+            for (ResourceLocation preq : resourceKeyNodeEntry.getValue().getPrerequisites()) {
+                RESEARCH_TREE.putEdge(nodes.get(preq), resourceKeyNodeEntry.getValue());
+            }
+        }
+
     }
 
     @SubscribeEvent
