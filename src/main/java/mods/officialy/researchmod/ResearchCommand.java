@@ -21,8 +21,8 @@ public class ResearchCommand {
                                     Team team = TeamArgument.get(context, "team");
                                     ResearchCommandModes mode = context.getArgument("mode", ResearchCommandModes.class);
                                     switch (mode) {
-                                        case list -> ResearchManager.printResearch(team, context.getSource().getServer());
-                                        case clear -> ResearchManager.clearResearch(team, context.getSource().getServer());
+                                        case list -> ResearchManager.printResearch(team, context.getSource());
+                                        case clear -> ResearchManager.clearResearch(team, context.getSource());
                                         case remove, add ->
                                                 throw new SimpleCommandExceptionType(Component.translatable("text.research.command.missing")).create();
                                     }
@@ -31,18 +31,16 @@ public class ResearchCommand {
                                 .then(Commands.argument("research_name", new ResearchEntryArgument(buildContext)).executes(context -> {
                                     Team team = TeamArgument.get(context, "team");
                                     ResearchCommandModes mode = context.getArgument("mode", ResearchCommandModes.class);
-                                    //Registry<ResearchEntry> registries = context.getSource().registryAccess().registryOrThrow(ResearchMod.RESEARCH_KEY);
                                     ResearchEntry entry = ResearchEntryArgument.getResearch(context, "research_name");
 
                                     switch (mode) {
-                                        case list ->
-                                                ResearchManager.printResearch(team, context.getSource().getServer());
+                                        case list -> ResearchManager.printResearch(team, context.getSource());
                                         case clear ->
-                                                ResearchManager.clearResearch(team, context.getSource().getServer());
+                                                ResearchManager.clearResearch(team, context.getSource());
                                         case remove ->
-                                                ResearchManager.removeResearch(team, context.getSource().getServer(), entry);
+                                                ResearchManager.removeResearch(team, context.getSource(), entry);
                                         case add ->
-                                                ResearchManager.addResearch(team, context.getSource().getServer(), entry);
+                                                ResearchManager.addResearch(team, context.getSource(), entry);
                                     }
                                     return 0;
                                 })))));
