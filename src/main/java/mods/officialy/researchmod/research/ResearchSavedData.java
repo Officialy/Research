@@ -32,11 +32,12 @@ public class ResearchSavedData extends SavedData {
         ResearchSavedData rsd = create(server);
         for (String str : compoundTag.getAllKeys()) {
             ArrayList<ResearchData> list = new ArrayList<>();
-            for (Tag tag : compoundTag.getList(str, 7)) {
+            for (Tag tag : compoundTag.getList(str, 10)) { // DO NOT CHANGE FROM 10
                 ResearchData data = new ResearchData();
                 data.deserializeNBT((CompoundTag) tag);
                 list.add(data);
             }
+            // TODO Make safe
             rsd.researchData.put(FTBTeamsAPI.api().getManager().getTeamByID(UUID.fromString(str)).get(), list);
         }
         return rsd;

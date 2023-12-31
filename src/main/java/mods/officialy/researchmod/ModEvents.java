@@ -36,7 +36,7 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void registerCommands(RegisterCommandsEvent event) {
-        ResearchCommand.register(event.getDispatcher());
+        ResearchCommand.register(event.getDispatcher(), event.getBuildContext());
     }
 
 }

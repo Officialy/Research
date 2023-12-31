@@ -9,10 +9,15 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import mods.officialy.researchmod.command.ResearchEntryArgument;
 import mods.officialy.researchmod.research.ResearchEntry;
 import mods.officialy.researchmod.research.ResearchSavedData;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.commands.arguments.SlotArgument;
+import net.minecraft.commands.synchronization.ArgumentTypeInfo;
+import net.minecraft.commands.synchronization.ArgumentTypeInfos;
+import net.minecraft.commands.synchronization.SingletonArgumentInfo;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -53,18 +58,21 @@ import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.function.Supplier;
 
-@Mod(Constants.MODID)
+import static mods.officialy.researchmod.Constants.MODID;
+
+@Mod(MODID)
 public class ResearchMod {
 
     // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
     // Create a Deferred Register to hold Blocks which will all be registered under the "research" namespace
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, Constants.MODID);
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
     // Create a Deferred Register to hold Items which will all be registered under the "research" namespace
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, Constants.MODID);
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
     // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "examplemod" namespace
-    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Constants.MODID);
+    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
     @SuppressWarnings({"UnstableApiUsage"})
     final // Shush the "beta" annotation
@@ -72,7 +80,7 @@ public class ResearchMod {
 
     private static final String PROTOCOL_VERSION = "1";
     public static final SimpleChannel PACKET_HANDLER = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(Constants.MODID, "main"),
+            new ResourceLocation(MODID, "main"),
             () -> PROTOCOL_VERSION,
             PROTOCOL_VERSION::equals,
             PROTOCOL_VERSION::equals
@@ -105,7 +113,7 @@ public class ResearchMod {
                 output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
             }).build());
 
-    public static final ResourceKey<Registry<ResearchEntry>> RESEARCH_KEY = ResourceKey.createRegistryKey(new ResourceLocation(Constants.MODID, "research"));
+    public static final ResourceKey<Registry<ResearchEntry>> RESEARCH_KEY = ResourceKey.createRegistryKey(new ResourceLocation(MODID, "research"));
 
     public ResearchMod() {
 
@@ -121,6 +129,7 @@ public class ResearchMod {
         ITEMS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so tabs get registered
         CREATIVE_MODE_TABS.register(modEventBus);
+        ARGUMENTS.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
@@ -167,7 +176,7 @@ public class ResearchMod {
         LOGGER.info(RESEARCH_TREE.toString());
 
         // Even needed?
-        event.getServer().overworld().getDataStorage().computeIfAbsent(tag -> ResearchSavedData.load(event.getServer(), tag), () -> ResearchSavedData.create(event.getServer()), "research_data");
+        event.getServer().overworld().getDataStorage().computeIfAbsent(tag ->   ResearchSavedData.load(event.getServer(), tag), () -> ResearchSavedData.create(event.getServer()), "research_data");
 
     }
 
@@ -210,8 +219,12 @@ public class ResearchMod {
         event.dataPackRegistry(RESEARCH_KEY, NODE_CODEC, NODE_CODEC);
     }
 
+    private static final DeferredRegister<ArgumentTypeInfo<?, ?>> ARGUMENTS = DeferredRegister.create(ForgeRegistries.COMMAND_ARGUMENT_TYPES, MODID);
+
+    public static final RegistryObject<ArgumentTypeInfo> RESEARCH_ARGUMENT = ARGUMENTS.register("research_argument", () -> ArgumentTypeInfos.registerByClass(ResearchEntryArgument.class, SingletonArgumentInfo.contextAware((context)->ResearchEntryArgument.research(context)))); //new ResearchEntryArgument.Info()));
+
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
-    @Mod.EventBusSubscriber(modid = Constants.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
         public static final Lazy<KeyMapping> SHOW_TREE_BINDING = Lazy.of(() -> new KeyMapping("key.research.show_screen",
                 InputConstants.Type.KEYSYM,
