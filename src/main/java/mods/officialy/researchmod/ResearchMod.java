@@ -3,14 +3,13 @@ package mods.officialy.researchmod;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import dev.latvian.mods.kubejs.script.data.DataPackEventJS;
+import mods.officialy.researchmod.research.Node;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.*;
@@ -34,7 +33,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Lazy;
-import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -46,6 +44,8 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
 import net.minecraftforge.registries.*;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
@@ -68,8 +68,17 @@ public class ResearchMod {
     // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "examplemod" namespace
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
-    @SuppressWarnings({"UnstableApiUsage"}) // Shush the "beta" annotation
+    @SuppressWarnings({"UnstableApiUsage"})
+    final // Shush the "beta" annotation
     MutableGraph<Object> RESEARCH_TREE = GraphBuilder.directed().build();
+
+    private static final String PROTOCOL_VERSION = "1";
+    public static final SimpleChannel PACKET_HANDLER = NetworkRegistry.newSimpleChannel(
+            new ResourceLocation(MODID, "main"),
+            () -> PROTOCOL_VERSION,
+            PROTOCOL_VERSION::equals,
+            PROTOCOL_VERSION::equals
+    );
 
     // Creates a new Block with the id "research:example_block", combining the namespace and path
     public static final RegistryObject<Block> EXAMPLE_BLOCK = BLOCKS.register("example_block", () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.STONE)) {
@@ -122,6 +131,9 @@ public class ResearchMod {
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
         modEventBus.addListener(this::addDataPackRegistry);
+        // Frankly unsure if this is needed or not?
+//        int i = 0;
+//        PACKET_HANDLER.registerMessage(i++, SyncResearchDatapack.class, SyncResearchDatapack::encode, SyncResearchDatapack::decode, SyncResearchDatapack::handle);
 
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
@@ -185,17 +197,16 @@ public class ResearchMod {
                 }
             },
             ingredient -> new Dynamic<>(JsonOps.INSTANCE, ingredient.toJson()));
+    public static final Codec<Node> NODE_CODEC = RecordCodecBuilder.create(instance ->
+            instance.group(
+                            ResourceLocation.CODEC.fieldOf("researchName").forGetter(Node::getResearchName),
+                            ResourceLocation.CODEC.listOf().fieldOf("prerequisites").forGetter(Node::getPrerequisites),
+                            Codec.pair(INGREDIENT_CODEC.fieldOf("ingredient").codec(), Codec.INT.fieldOf("count").codec()).listOf().fieldOf("items").forGetter(Node::getPrerequisiteItems))
+                    .apply(instance, Node::new));
 
     private void addDataPackRegistry(final DataPackRegistryEvent.NewRegistry event) {
         LOGGER.info("Adding new Registry!");
-        final Codec<Pair<Ingredient, Integer>> ingredientCodec = Codec.pair(INGREDIENT_CODEC.fieldOf("ingredient").codec(), Codec.INT.fieldOf("count").codec());
-        final Codec<Node> nodeCodec = RecordCodecBuilder.create(instance ->
-                instance.group(
-                                ResourceLocation.CODEC.fieldOf("researchName").forGetter(Node::getResearchName),
-                                ResourceLocation.CODEC.listOf().fieldOf("prerequisites").forGetter(Node::getPrerequisites),
-                                ingredientCodec.listOf().fieldOf("items").forGetter(Node::getPrerequisiteItems))
-                        .apply(instance, Node::new));
-        event.dataPackRegistry(RESEARCH_KEY, nodeCodec, nodeCodec);
+        event.dataPackRegistry(RESEARCH_KEY, NODE_CODEC, NODE_CODEC);
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent

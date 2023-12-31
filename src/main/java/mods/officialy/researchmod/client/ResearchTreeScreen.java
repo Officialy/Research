@@ -1,11 +1,11 @@
-package mods.officialy.researchmod;
+package mods.officialy.researchmod.client;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 public class ResearchTreeScreen extends Screen {
-    protected ResearchTreeScreen() {
+    public ResearchTreeScreen() {
         super(Component.translatable("research.tree.title"));
     }
 

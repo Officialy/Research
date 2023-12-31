@@ -1,4 +1,4 @@
-package mods.officialy.researchmod;
+package mods.officialy.researchmod.research;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.network.chat.Component;
@@ -19,7 +19,7 @@ public class Node {
     private final Component translatedDescription;
 
 
-    Node(ResourceLocation name, List<ResourceLocation> prerequisites, List<Pair<Ingredient, Integer>> prerequisiteItems) {
+    public Node(ResourceLocation name, List<ResourceLocation> prerequisites, List<Pair<Ingredient, Integer>> prerequisiteItems) {
         this.researchName = name;
         this.prerequisites = prerequisites;
         this.activated = false;

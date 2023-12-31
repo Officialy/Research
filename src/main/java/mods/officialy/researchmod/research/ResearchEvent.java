@@ -1,4 +1,4 @@
-package mods.officialy.researchmod;
+package mods.officialy.researchmod.research;
 
 public enum ResearchEvent {
     ACTIVATED,            // Research is activated
