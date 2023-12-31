@@ -25,7 +25,7 @@ public class ResearchReloader extends SimpleJsonResourceReloadListener {
     protected void apply(Map<ResourceLocation, JsonElement> resourceList, ResourceManager pResourceManager, ProfilerFiller pProfiler) {
         for (Map.Entry<ResourceLocation, JsonElement> entry : resourceList.entrySet()) {
            ResearchMod.LOGGER.info(entry.toString());
-            DataResult<Node> parse = ResearchMod.NODE_CODEC.parse(JsonOps.INSTANCE, entry.getValue());
+            DataResult<ResearchEntry> parse = ResearchMod.NODE_CODEC.parse(JsonOps.INSTANCE, entry.getValue());
             ResearchMod.LOGGER.info(parse.toString());
         }
 

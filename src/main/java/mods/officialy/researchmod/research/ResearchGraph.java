@@ -6,7 +6,7 @@ import java.util.*;
 
 public class ResearchGraph {
 
-    Map<ResourceLocation, Node> researchNodes;
+    Map<ResourceLocation, ResearchEntry> researchNodes;
     Set<ResearchEventListener> eventListeners;
 
     public ResearchGraph() {
@@ -15,15 +15,15 @@ public class ResearchGraph {
     }
 
     public void addResearch(ResourceLocation researchName) {
-        researchNodes.put(researchName, new Node(researchName, new ArrayList<>(), new ArrayList<>()));
+        researchNodes.put(researchName, new ResearchEntry(researchName, new ArrayList<>(), new ArrayList<>()));
     }
 
     public void addPrerequisite(ResourceLocation researchName, ResourceLocation prerequisiteName) {
-        Node researchNode = researchNodes.get(researchName);
-        Node prerequisiteNode = researchNodes.get(prerequisiteName);
+        ResearchEntry researchEntry = researchNodes.get(researchName);
+        ResearchEntry prerequisiteResearchEntry = researchNodes.get(prerequisiteName);
 
-        if (researchNode != null && prerequisiteNode != null) {
-            researchNode.getPrerequisites().add(prerequisiteNode.getResearchName());
+        if (researchEntry != null && prerequisiteResearchEntry != null) {
+            researchEntry.getPrerequisites().add(prerequisiteResearchEntry.getResearchName());
         } else {
             System.out.println("Research or prerequisite not found.");
         }
@@ -34,14 +34,14 @@ public class ResearchGraph {
     }
 
     public boolean canResearch(ResourceLocation researchName, Set<ResourceLocation> researched) {
-        Node researchNode = researchNodes.get(researchName);
+        ResearchEntry researchResearchEntry = researchNodes.get(researchName);
 
-        if (researchNode == null) {
+        if (researchResearchEntry == null) {
             System.out.println("Research not found.");
             return false;
         }
 
-        for (ResourceLocation prerequisite : researchNode.getPrerequisites()) {
+        for (ResourceLocation prerequisite : researchResearchEntry.getPrerequisites()) {
             if (!researched.contains(prerequisite) || !canResearch(prerequisite, researched)) {
                 return false;
             }
@@ -51,11 +51,11 @@ public class ResearchGraph {
     }
 
     public void unlockResearch(ResourceLocation researchName) {
-        Node researchNode = researchNodes.get(researchName);
+        ResearchEntry researchResearchEntry = researchNodes.get(researchName);
 
-        if (researchNode != null && !researchNode.isActivated()) {
-            researchNode.activate();
-            researchNode.consumeItems();
+        if (researchResearchEntry != null && !researchResearchEntry.isActivated()) {
+            researchResearchEntry.activate();
+            researchResearchEntry.consumeItems();
             notifyListeners(researchName, ResearchEvent.ACTIVATED);
             notifyListeners(researchName, ResearchEvent.ITEMS_CONSUMED);
 //            notifyListeners(researchName, ResearchEvent.COMPLETED);

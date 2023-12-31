@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Node {
+// Represents a specific research entry
+// See ResearchData for actual progress tracking/completion
+public class ResearchEntry {
 
     private final ResourceLocation researchName;
     private final List<ResourceLocation> prerequisites;
@@ -19,7 +21,7 @@ public class Node {
     private final Component translatedDescription;
 
 
-    public Node(ResourceLocation name, List<ResourceLocation> prerequisites, List<Pair<Ingredient, Integer>> prerequisiteItems) {
+    public ResearchEntry(ResourceLocation name, List<ResourceLocation> prerequisites, List<Pair<Ingredient, Integer>> prerequisiteItems) {
         this.researchName = name;
         this.prerequisites = prerequisites;
         this.activated = false;

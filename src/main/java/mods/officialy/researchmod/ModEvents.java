@@ -2,6 +2,7 @@ package mods.officialy.researchmod;
 
 import mods.officialy.researchmod.client.ResearchTreeScreen;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.telemetry.events.WorldLoadEvent;
 import net.minecraftforge.event.OnDatapackSyncEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
@@ -9,7 +10,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import static mods.officialy.researchmod.ResearchMod.ClientModEvents.SHOW_TREE_BINDING;
 
-// Just tossing this here since I'm tired and cant be bothered
+// Collection of events used that are on the FORGE event bus
 public class ModEvents {
 
     @SubscribeEvent

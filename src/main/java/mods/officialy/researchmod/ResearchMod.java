@@ -9,7 +9,8 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import mods.officialy.researchmod.research.Node;
+import mods.officialy.researchmod.research.ResearchEntry;
+import mods.officialy.researchmod.research.ResearchSavedData;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.*;
@@ -53,20 +54,17 @@ import org.slf4j.Logger;
 import java.util.Arrays;
 import java.util.Map;
 
-// The value here should match an entry in the META-INF/mods.toml file
-@Mod(ResearchMod.MODID)
+@Mod(Constants.MODID)
 public class ResearchMod {
 
-    // Define mod id in a common place for everything to reference
-    public static final String MODID = "research";
     // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
     // Create a Deferred Register to hold Blocks which will all be registered under the "research" namespace
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, Constants.MODID);
     // Create a Deferred Register to hold Items which will all be registered under the "research" namespace
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, Constants.MODID);
     // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "examplemod" namespace
-    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
+    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Constants.MODID);
 
     @SuppressWarnings({"UnstableApiUsage"})
     final // Shush the "beta" annotation
@@ -74,7 +72,7 @@ public class ResearchMod {
 
     private static final String PROTOCOL_VERSION = "1";
     public static final SimpleChannel PACKET_HANDLER = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(MODID, "main"),
+            new ResourceLocation(Constants.MODID, "main"),
             () -> PROTOCOL_VERSION,
             PROTOCOL_VERSION::equals,
             PROTOCOL_VERSION::equals
@@ -107,7 +105,7 @@ public class ResearchMod {
                 output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
             }).build());
 
-    public static final ResourceKey<Registry<Node>> RESEARCH_KEY = ResourceKey.createRegistryKey(new ResourceLocation(MODID, "research"));
+    public static final ResourceKey<Registry<ResearchEntry>> RESEARCH_KEY = ResourceKey.createRegistryKey(new ResourceLocation(Constants.MODID, "research"));
 
     public ResearchMod() {
 
@@ -168,10 +166,13 @@ public class ResearchMod {
         assembleResearchTree(registries.registryOrThrow(RESEARCH_KEY));
         LOGGER.info(RESEARCH_TREE.toString());
 
+        // Even needed?
+        event.getServer().overworld().getDataStorage().computeIfAbsent(tag -> ResearchSavedData.load(event.getServer(), tag), () -> ResearchSavedData.create(event.getServer()), "research_data");
+
     }
 
-    private void assembleResearchTree(Registry<Node> nodes) {
-        for (Map.Entry<ResourceKey<Node>, Node> resourceKeyNodeEntry : nodes.entrySet()) {
+    private void assembleResearchTree(Registry<ResearchEntry> nodes) {
+        for (Map.Entry<ResourceKey<ResearchEntry>, ResearchEntry> resourceKeyNodeEntry : nodes.entrySet()) {
             RESEARCH_TREE.addNode(resourceKeyNodeEntry.getValue());
             for (ResourceLocation preq : resourceKeyNodeEntry.getValue().getPrerequisites()) {
                 RESEARCH_TREE.putEdge(nodes.get(preq), resourceKeyNodeEntry.getValue());
@@ -181,7 +182,7 @@ public class ResearchMod {
     }
 
     @SubscribeEvent
-    public void onServerStarting(ServerStartedEvent event) {
+    public void onServerStarted(ServerStartedEvent event) {
         // Do something when the server starts
         LOGGER.info("HELLO from server started");
         RegistryAccess registries = event.getServer().registryAccess();
@@ -197,12 +198,12 @@ public class ResearchMod {
                 }
             },
             ingredient -> new Dynamic<>(JsonOps.INSTANCE, ingredient.toJson()));
-    public static final Codec<Node> NODE_CODEC = RecordCodecBuilder.create(instance ->
+    public static final Codec<ResearchEntry> NODE_CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
-                            ResourceLocation.CODEC.fieldOf("researchName").forGetter(Node::getResearchName),
-                            ResourceLocation.CODEC.listOf().fieldOf("prerequisites").forGetter(Node::getPrerequisites),
-                            Codec.pair(INGREDIENT_CODEC.fieldOf("ingredient").codec(), Codec.INT.fieldOf("count").codec()).listOf().fieldOf("items").forGetter(Node::getPrerequisiteItems))
-                    .apply(instance, Node::new));
+                            ResourceLocation.CODEC.fieldOf("researchName").forGetter(ResearchEntry::getResearchName),
+                            ResourceLocation.CODEC.listOf().fieldOf("prerequisites").forGetter(ResearchEntry::getPrerequisites),
+                            Codec.pair(INGREDIENT_CODEC.fieldOf("ingredient").codec(), Codec.INT.fieldOf("count").codec()).listOf().fieldOf("items").forGetter(ResearchEntry::getPrerequisiteItems))
+                    .apply(instance, ResearchEntry::new));
 
     private void addDataPackRegistry(final DataPackRegistryEvent.NewRegistry event) {
         LOGGER.info("Adding new Registry!");
@@ -210,7 +211,7 @@ public class ResearchMod {
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
-    @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    @Mod.EventBusSubscriber(modid = Constants.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
         public static final Lazy<KeyMapping> SHOW_TREE_BINDING = Lazy.of(() -> new KeyMapping("key.research.show_screen",
                 InputConstants.Type.KEYSYM,
