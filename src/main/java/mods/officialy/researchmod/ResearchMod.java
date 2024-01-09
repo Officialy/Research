@@ -9,7 +9,9 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import mods.officialy.researchmod.block.BasicLab;
 import mods.officialy.researchmod.command.ResearchEntryArgument;
+import mods.officialy.researchmod.entity.BasicLabEntity;
 import mods.officialy.researchmod.research.ResearchEntry;
 import mods.officialy.researchmod.research.ResearchSavedData;
 import net.minecraft.client.KeyMapping;
@@ -24,6 +26,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.*;
@@ -31,6 +34,8 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
@@ -93,13 +98,16 @@ public class ResearchMod {
         public InteractionResult use(BlockState p_60503_, Level level, BlockPos p_60505_, Player player, InteractionHand p_60507_, BlockHitResult p_60508_) {
             RegistryAccess registries = level.registryAccess();
             LOGGER.info(Arrays.toString(registries.registryOrThrow(RESEARCH_KEY).entrySet().toArray()));
-//            FTBTeamsAPI.api().getManager().getTeamForPlayer((ServerPlayer) player).get().get();
-//            ((ServerLevel) level).getDataStorage().computeIfAbsent()
             return super.use(p_60503_, level, p_60505_, player, p_60507_, p_60508_);
         }
     });
+
+    public static final RegistryObject<Block> BASIC_LAB = BLOCKS.register("basic_lab", BasicLab::new);
+
     // Creates a new BlockItem with the id "research:example_block", combining the namespace and path
     public static final RegistryObject<Item> EXAMPLE_BLOCK_ITEM = ITEMS.register("example_block", () -> new BlockItem(EXAMPLE_BLOCK.get(), new Item.Properties()));
+
+    public static final RegistryObject<Item> BASIC_LAB_ITEM = ITEMS.register("basic_lab", () -> new BlockItem(BASIC_LAB.get(), new Item.Properties()));
 
     // Creates a new food item with the id "examplemod:example_id", nutrition 1 and saturation 2
     public static final RegistryObject<Item> EXAMPLE_ITEM = ITEMS.register("example_item", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
@@ -112,6 +120,11 @@ public class ResearchMod {
             .displayItems((parameters, output) -> {
                 output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
             }).build());
+
+    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MODID);
+
+    public static final RegistryObject<BlockEntityType<BasicLabEntity>> LAB_TYPE = BLOCK_ENTITIES.register("basic_lab",()-> BlockEntityType.Builder.of(BasicLabEntity::new, BASIC_LAB.get()).build(null));
+
 
     public static final ResourceKey<Registry<ResearchEntry>> RESEARCH_KEY = ResourceKey.createRegistryKey(new ResourceLocation(MODID, "research"));
 
@@ -127,6 +140,7 @@ public class ResearchMod {
         BLOCKS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so items get registered
         ITEMS.register(modEventBus);
+        BLOCK_ENTITIES.register(modEventBus);
         // Register the Deferred Register to the mod event bus so tabs get registered
         CREATIVE_MODE_TABS.register(modEventBus);
         ARGUMENTS.register(modEventBus);
@@ -176,7 +190,7 @@ public class ResearchMod {
         LOGGER.info(RESEARCH_TREE.toString());
 
         // Even needed?
-        event.getServer().overworld().getDataStorage().computeIfAbsent(tag ->   ResearchSavedData.load(event.getServer(), tag), () -> ResearchSavedData.create(event.getServer()), "research_data");
+        event.getServer().overworld().getDataStorage().computeIfAbsent(tag -> ResearchSavedData.load(event.getServer(), tag), () -> ResearchSavedData.create(event.getServer()), "research_data");
 
     }
 
@@ -209,6 +223,7 @@ public class ResearchMod {
             ingredient -> new Dynamic<>(JsonOps.INSTANCE, ingredient.toJson()));
     public static final Codec<ResearchEntry> NODE_CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
+                            // TODO Add fluid and energy support to research entries
                             ResourceLocation.CODEC.fieldOf("researchName").forGetter(ResearchEntry::getResearchName),
                             ResourceLocation.CODEC.listOf().fieldOf("prerequisites").forGetter(ResearchEntry::getPrerequisites),
                             Codec.pair(INGREDIENT_CODEC.fieldOf("ingredient").codec(), Codec.INT.fieldOf("count").codec()).listOf().fieldOf("items").forGetter(ResearchEntry::getPrerequisiteItems))
@@ -221,7 +236,7 @@ public class ResearchMod {
 
     private static final DeferredRegister<ArgumentTypeInfo<?, ?>> ARGUMENTS = DeferredRegister.create(ForgeRegistries.COMMAND_ARGUMENT_TYPES, MODID);
 
-    public static final RegistryObject<ArgumentTypeInfo> RESEARCH_ARGUMENT = ARGUMENTS.register("research_argument", () -> ArgumentTypeInfos.registerByClass(ResearchEntryArgument.class, SingletonArgumentInfo.contextAware((context)->ResearchEntryArgument.research(context)))); //new ResearchEntryArgument.Info()));
+    public static final RegistryObject<ArgumentTypeInfo> RESEARCH_ARGUMENT = ARGUMENTS.register("research_argument", () -> ArgumentTypeInfos.registerByClass(ResearchEntryArgument.class, SingletonArgumentInfo.contextAware((context) -> ResearchEntryArgument.research(context)))); //new ResearchEntryArgument.Info()));
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
     @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
