@@ -2,5 +2,6 @@
   "research.tree.title": "Research Tree",
   "key.research.show_screen": "Show Research Tree",
   "text.research.command.missing": "Missing Research Argument",
-  "argument.research.id.invalid": "Unknown Research"
+  "argument.research.id.invalid": "Unknown Research",
+  "container.researchmod.lab": "Research Lab"
 }

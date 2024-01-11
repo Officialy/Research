@@ -6,8 +6,8 @@ import java.util.*;
 
 public class ResearchGraph {
 
-    Map<ResourceLocation, ResearchEntry> researchNodes;
-    Set<ResearchEventListener> eventListeners;
+    public Map<ResourceLocation, ResearchEntry> researchNodes;
+    public Set<ResearchEventListener> eventListeners;
 
     public ResearchGraph() {
         this.researchNodes = new HashMap<>();
@@ -85,7 +85,7 @@ public class ResearchGraph {
     }
 
     public static void main(String[] args) {
-        ResearchGraph researchGraph = new ResearchGraph();
+
 
 //        researchGraph.addResearch(new ResourceLocation("Advanced Materials"));
 //        researchGraph.addResearch("Energy Efficiency"));

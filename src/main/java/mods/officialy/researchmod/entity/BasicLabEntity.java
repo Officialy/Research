@@ -36,6 +36,6 @@ public class BasicLabEntity extends BlockEntity {
     }
 
     public static void tickLab(Level pLevel, BlockPos pPos, BlockState pState, BasicLabEntity pBlockEntity) {
-        System.out.println(pBlockEntity.optionalData.orElseThrow(RuntimeException::new).getString());
+//        System.out.println(pBlockEntity.optionalData.orElseThrow(RuntimeException::new).getString());
     }
 }
