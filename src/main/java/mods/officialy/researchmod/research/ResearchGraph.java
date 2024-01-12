@@ -18,6 +18,10 @@ public class ResearchGraph {
         researchNodes.put(researchName, new ResearchEntry(researchName, new ArrayList<>(), new ArrayList<>()));
     }
 
+    public ResearchEntry getResearch(ResourceLocation researchName) {
+        return researchNodes.get(researchName);
+    }
+
     public void addPrerequisite(ResourceLocation researchName, ResourceLocation prerequisiteName) {
         ResearchEntry researchEntry = researchNodes.get(researchName);
         ResearchEntry prerequisiteResearchEntry = researchNodes.get(prerequisiteName);

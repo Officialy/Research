@@ -4,6 +4,8 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Ingredient;
+import org.joml.Vector2d;
+import org.joml.Vector2f;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +22,7 @@ public class ResearchEntry {
     private final Component translatedName;
     private final Component translatedDescription;
 
+    private final Vector2f position;
 
     public ResearchEntry(ResourceLocation name, List<ResourceLocation> prerequisites, List<Pair<Ingredient, Integer>> prerequisiteItems) {
         this.researchName = name;
@@ -28,6 +31,7 @@ public class ResearchEntry {
         this.prerequisiteItems = prerequisiteItems;
         this.translatedName = Component.translatable(researchName.toLanguageKey() + ".research.title");
         this.translatedDescription = Component.translatable(researchName.toLanguageKey() + ".research.description");
+        this.position = new Vector2f(0, 0);
     }
 
     boolean isActivated() {
@@ -65,6 +69,22 @@ public class ResearchEntry {
         return translatedDescription;
     }
 
+    public Vector2f getPosition() {
+        return position;
+    }
+
+    public void setPosition(Vector2d position) {
+        this.position.set(position);
+    }
+
+    public float getXPosition() {
+        return position.x;
+    }
+
+    public float getYPosition() {
+        return position.y;
+    }
+
     @Override
     public String toString() {
         List<String> preReqs = new ArrayList<>();
@@ -74,6 +94,9 @@ public class ResearchEntry {
                 ", prerequisites=" + prerequisites +
                 ", activated=" + activated +
                 ", prerequisiteItems=" + preReqs +
+                ", translatedName=" + translatedName +
+                ", translatedDescription=" + translatedDescription +
+                ", position=" + position +
                 '}';
     }
 }
