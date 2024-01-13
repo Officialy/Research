@@ -17,6 +17,7 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
 import net.minecraft.util.RandomSource;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -69,10 +70,6 @@ public class ResearchTreeScreen extends Screen {
         float endX = researchEntry2.getXPosition(); // Replace with actual X position logic
         float endY = researchEntry2.getYPosition(); // Replace with actual Y position logic
 
-//        poseStack.pushPose();
-        //var matrixStack = poseStack.last().pose();
-
-
         //Random for testing
         RandomSource random = RandomSource.create();
 
@@ -89,26 +86,18 @@ public class ResearchTreeScreen extends Screen {
         // Draw a line using the matrixStack
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder bufferBuilder = tesselator.getBuilder();
-//        RenderSystem.disableTexture();
-        RenderSystem.lineWidth(6.0F);
-        RenderSystem.enableColorLogicOp();
-        RenderSystem.logicOp(GlStateManager.LogicOp.OR_REVERSE);
 
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        drawLine(graphics, bufferBuilder, startX, startY, endX, endY, 1.0F, 0.0F, 0.0F, 1.0F);
+        drawLine(graphics, bufferBuilder, startX, startY, endX, endY, 255, 50, 60, 255);
         tesselator.end();
 
-        RenderSystem.lineWidth(1.0F);
-        RenderSystem.disableColorLogicOp();
-        //poseStack.popPose();
-//        RenderSystem.enableTexture();
-//        ResearchMod.LOGGER.info("Drawing line from " + startX + ", " + startY + " to " + endX + ", " + endY);
     }
 
     // Example method to draw a line
-    private void drawLine(GuiGraphics graphics, BufferBuilder bufferBuilder, float startX, float startY, float endX, float endY, float red, float green, float blue, float alpha) {
-        graphics.hLine((int) startX, (int) endX, (int) startY, -1);
-        graphics.vLine((int) startX, (int) startY, (int) endY, -1);
+    private void drawLine(GuiGraphics graphics, BufferBuilder bufferBuilder, float startX, float startY, float endX, float endY, int red, int green, int blue, int alpha) {
+        var col = FastColor.ABGR32.color(alpha, red, green, blue);
+        graphics.hLine((int) startX, (int) endX, (int) startY, col);
+        graphics.vLine((int) startX, (int) startY, (int) endY, col);
 //        bufferBuilder.vertex(matrixStack, startX, startY, 1).color(red, green, blue, alpha).endVertex();
 //        bufferBuilder.vertex(matrixStack, endX, endY, 1).color(red, green, blue, alpha).endVertex();
 //        bufferBuilder.vertex(matrixStack, endX, endY, 1).color(red, green, blue, alpha).endVertex();
