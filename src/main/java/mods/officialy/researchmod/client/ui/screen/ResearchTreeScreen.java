@@ -2,8 +2,10 @@ package mods.officialy.researchmod.client.ui.screen;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
-import mods.officialy.researchmod.ResearchMod;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import mods.officialy.researchmod.client.ui.ResearchButton;
 import mods.officialy.researchmod.research.ResearchEntry;
 import mods.officialy.researchmod.research.ResearchGraph;
@@ -16,8 +18,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.Pose;
-import org.joml.Matrix4f;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ResearchTreeScreen extends Screen {
     private final ResearchGraph researchGraph = new ResearchGraph(); //temporary, just to test
@@ -35,7 +37,7 @@ public class ResearchTreeScreen extends Screen {
         graphics.drawCenteredString(font, getTitle(), width / 2, 15, 16777215);
 
         // Additional rendering logic for your research tree
-        renderResearchTree(graphics.pose(), mouseX, mouseY);
+        renderResearchTree(graphics, mouseX, mouseY);
         super.render(graphics, mouseX, mouseY, partialTicks);
     }
 
@@ -48,26 +50,27 @@ public class ResearchTreeScreen extends Screen {
     }
 
     // Additional method for rendering your research tree
-    private void renderResearchTree(PoseStack matrixStack, int mouseX, int mouseY) {
+    private void renderResearchTree(GuiGraphics graphics, int mouseX, int mouseY) {
         // Example: Draw connections between research nodes
         researchGraph.researchNodes.forEach((researchName, researchEntry) -> {
             for (ResourceLocation prerequisite : researchEntry.getPrerequisites()) {
                 ResearchEntry prerequisiteEntry = researchGraph.getResearch(prerequisite);
 
                 // Draw a line connecting research nodes
-                drawLine(matrixStack, researchEntry, prerequisiteEntry, mouseX, mouseY);
+                drawLine(graphics, researchEntry, prerequisiteEntry, mouseX, mouseY);
             }
         });
     }
 
     // Example method to draw a line connecting two research nodes
-    private void drawLine(PoseStack poseStack, ResearchEntry researchEntry1, ResearchEntry researchEntry2, int mouseX, int mouseY) {
+    private void drawLine(GuiGraphics graphics, ResearchEntry researchEntry1, ResearchEntry researchEntry2, int mouseX, int mouseY) {
         float startX = researchEntry1.getXPosition(); // Replace with actual X position logic
         float startY = researchEntry1.getYPosition(); // Replace with actual Y position logic
         float endX = researchEntry2.getXPosition(); // Replace with actual X position logic
         float endY = researchEntry2.getYPosition(); // Replace with actual Y position logic
 
-        var matrixStack = poseStack.last().pose();
+//        poseStack.pushPose();
+        //var matrixStack = poseStack.last().pose();
 
 
         //Random for testing
@@ -92,21 +95,24 @@ public class ResearchTreeScreen extends Screen {
         RenderSystem.logicOp(GlStateManager.LogicOp.OR_REVERSE);
 
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        drawLine(matrixStack, bufferBuilder, startX, startY, endX, endY, 1.0F, 0.0F, 0.0F, 1.0F);
+        drawLine(graphics, bufferBuilder, startX, startY, endX, endY, 1.0F, 0.0F, 0.0F, 1.0F);
         tesselator.end();
 
         RenderSystem.lineWidth(1.0F);
         RenderSystem.disableColorLogicOp();
+        //poseStack.popPose();
 //        RenderSystem.enableTexture();
 //        ResearchMod.LOGGER.info("Drawing line from " + startX + ", " + startY + " to " + endX + ", " + endY);
     }
 
     // Example method to draw a line
-    private void drawLine(Matrix4f matrixStack, BufferBuilder bufferBuilder, float startX, float startY, float endX, float endY, float red, float green, float blue, float alpha) {
-        bufferBuilder.vertex(matrixStack, startX, startY, 0).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(matrixStack, endX, endY, 0).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(matrixStack, endX, endY, 0).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(startX, startY, 0).color(red, green, blue, alpha).endVertex();
+    private void drawLine(GuiGraphics graphics, BufferBuilder bufferBuilder, float startX, float startY, float endX, float endY, float red, float green, float blue, float alpha) {
+        graphics.hLine((int) startX, (int) endX, (int) startY, -1);
+        graphics.vLine((int) startX, (int) startY, (int) endY, -1);
+//        bufferBuilder.vertex(matrixStack, startX, startY, 1).color(red, green, blue, alpha).endVertex();
+//        bufferBuilder.vertex(matrixStack, endX, endY, 1).color(red, green, blue, alpha).endVertex();
+//        bufferBuilder.vertex(matrixStack, endX, endY, 1).color(red, green, blue, alpha).endVertex();
+//        bufferBuilder.vertex(startX, startY, 1).color(red, green, blue, alpha).endVertex();
     }
 
 
@@ -126,9 +132,11 @@ public class ResearchTreeScreen extends Screen {
         researchGraph.addPrerequisite(new ResourceLocation("researchmod", "test_research3"), new ResourceLocation("researchmod", "test_research2"));
 
         //For each node, add a button
+        AtomicInteger i = new AtomicInteger();
         researchGraph.researchNodes.forEach((researchName, researchEntry) -> {
             //Adds a button for each research entry
-            addWidget(new ResearchButton(new Button.Builder(Component.translatable(researchName.toString()), ResearchButton::onPressed), researchEntry));
+            addRenderableWidget(new ResearchButton(new Button.Builder(Component.translatable(researchName.toString()), ResearchButton::onPressed).pos(10, i.get() *50), researchEntry));
+            i.getAndIncrement();
         });
     }
 
